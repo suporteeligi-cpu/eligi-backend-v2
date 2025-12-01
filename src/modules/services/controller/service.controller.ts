@@ -1,4 +1,4 @@
-import { AuthRequest } from "../../../middlewares/authMiddleware";
+import { AuthRequest } from "../../../middlewares/auth.middleware";
 import { Request, Response } from "express";
 import { serviceService } from "../service/service.service";
 import { createServiceSchema, updateServiceSchema, providerServiceSchema } from "../dto/service.dto";

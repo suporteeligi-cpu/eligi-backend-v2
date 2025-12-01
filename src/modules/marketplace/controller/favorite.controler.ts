@@ -1,4 +1,4 @@
-import { AuthRequest } from "../../../middlewares/authMiddleware";
+import { AuthRequest } from "@middlewares/auth.middleware";
 import { Response } from "express";
 import { toggleFavoriteSchema } from "../dto/favorite.dto";
 import { favoriteService } from "../service/favorite.service";

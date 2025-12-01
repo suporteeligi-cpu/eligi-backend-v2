@@ -25,6 +25,7 @@ import adminRoutes from "./modules/admin/admin.routes";
 import invoiceRoutes from "./modules/invoices/invoice.routes";
 import webhookRoutes from "./modules/webhooks/webhook.routes";
 
+
 app.use("/auth", authRoutes);
 app.use("/business", businessRoutes);
 app.use("/providers", providerRoutes);
@@ -35,6 +36,8 @@ app.use("/finance", financeRoutes);
 app.use("/admin", adminRoutes);
 app.use("/invoices", invoiceRoutes);
 app.use("/webhooks", webhookRoutes);
+
+
 
 app.get("/", (req, res) => {
   res.json({ status: "Backend ELIGI v2.0 rodando!" });

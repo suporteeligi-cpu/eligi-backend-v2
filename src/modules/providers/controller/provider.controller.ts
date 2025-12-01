@@ -1,5 +1,25 @@
-import { Request, Response } from "express";
-import { AuthRequest } from "../../../middlewares/authMiddleware";
+import { Request, Response, NextFunction } from "express";
+
+// Make `user` non-optional
+export interface AuthRequest extends Request {
+  user: { id: string; [k: string]: any };
+}
+
+export const requireAuth = (req: Request, res: Response, next: NextFunction) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) return res.status(401).json({ message: "Unauthorized" });
+  const token = authHeader.split(" ")[1];
+
+  try {
+    // verify token and extract payload (replace with your verify logic)
+    const payload = verifyToken(token); // implement this to your stack
+    (req as AuthRequest).user = { id: payload.sub, ...payload };
+    return next();
+  } catch {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+};
+
 import { providerService } from "../service/provider.service";
 import { createProviderSchema, updateProviderSchema, workingHoursSchema, breakSchema } from "../dto/provider.dto";
 
@@ -16,12 +36,9 @@ export const providerController = {
   },
 
   async list(req: AuthRequest, res: Response) {
-    try {
-      const providers = await providerService.list(req.user.id);
-      return res.json(providers);
-    } catch (err: any) {
-      return res.status(400).json({ message: err.message });
-    }
+    if (!req.user) return res.status(401).json({ message: "Unauthorized" }); // guard
+    const providers = await providerService.list(req.user.id);
+    return res.json(providers);
   },
 
   async update(req: AuthRequest, res: Response) {

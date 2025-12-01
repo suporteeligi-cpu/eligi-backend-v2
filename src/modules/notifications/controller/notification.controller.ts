@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { createNotificationSchema } from "../dto/notification.dto";
 import { notificationService } from "../service/notification.service";
-import { AuthRequest } from "../../../middlewares/authMiddleware";
+import { AuthRequest } from "../../../middlewares/auth.middleware";
 
 export const notificationController = {
 
@@ -17,6 +17,7 @@ export const notificationController = {
 
   async list(req: AuthRequest, res: Response) {
     try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" }); // <- guard
       const userId = req.user.id;
       const list = await notificationService.list(userId);
       return res.json(list);

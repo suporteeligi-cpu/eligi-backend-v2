@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { AuthRequest } from "../../../middlewares/authMiddleware";
+import { AuthRequest } from "../../../middlewares/auth.middleware";
 import { businessService } from "../service/business.service";
 import { createBusinessSchema, updateAddressSchema, updateSettingsSchema } from "../dto/business.dto";
 

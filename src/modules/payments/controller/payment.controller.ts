@@ -1,5 +1,5 @@
 import { Response } from "express";
-import { AuthRequest } from "../../../middlewares/authMiddleware";
+import { AuthRequest } from "../../../middlewares/auth.middleware";
 import { createPaymentSchema } from "../dto/payment.dto";
 import { paymentService } from "../service/payment.service";
 

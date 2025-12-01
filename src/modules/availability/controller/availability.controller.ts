@@ -1,5 +1,5 @@
 import { Response } from "express";
-import { AuthRequest } from "../../../middlewares/authMiddleware";
+import { AuthRequest } from "../../../middlewares/auth.middleware";
 import { availabilityService } from "../service/availability.service";
 import { availabilitySchema } from "../dto/availability.dto";
 

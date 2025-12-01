@@ -1,4 +1,4 @@
-import { AuthRequest } from "../../../middlewares/auth.middleware";
+import { AuthRequest } from "@middlewares/auth.middleware";
 import { Response } from "express";
 import { createReviewSchema } from "../dto/review.dto";
 import { reviewService } from "../service/review.service";
