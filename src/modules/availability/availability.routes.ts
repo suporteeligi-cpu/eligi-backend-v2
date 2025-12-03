@@ -1,9 +1,20 @@
 import { Router } from "express";
-import { authMiddleware } from '@middlewares/auth.middleware';
-import { availabilityController } from "./controller/availability.controller";
+import { AvailabilityController } from "./controller/availability.controller";
+import { authMiddleware } from "../../middlewares/auth.middleware";
 
 const router = Router();
+const controller = new AvailabilityController();
 
-router.get("/", authMiddleware, availabilityController.get);
+router.use(authMiddleware);
+
+// disponibilidade semanal
+router.post("/", controller.create);
+router.get("/provider/:providerId", controller.listByProvider);
+router.put("/:id", controller.update);
+router.delete("/:id", controller.delete);
+
+// exceções (bloqueios, folgas, pausas)
+router.post("/exception", controller.createException);
+router.get("/exception/:providerId", controller.listExceptions);
 
 export default router;

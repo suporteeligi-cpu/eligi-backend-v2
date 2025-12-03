@@ -1,35 +1,17 @@
 import { Request, Response } from "express";
-import { authService } from "../service/auth.service";
-import { registerSchema, loginSchema } from "../dto/auth.dto";
+import { AuthService } from "../service/auth.service";
 
-export const authController = {
-  async register(req: Request, res: Response) {
-    try {
-      const data = registerSchema.parse(req.body);
-      const user = await authService.register(data);
-      return res.status(201).json(user);
-    } catch (err: any) {
-      return res.status(400).json({ message: err.message });
-    }
-  },
+export class AuthController {
+  private service = new AuthService();
 
-  async login(req: Request, res: Response) {
-    try {
-      const data = loginSchema.parse(req.body);
-      const result = await authService.login(data);
-      return res.json(result);
-    } catch (err: any) {
-      return res.status(400).json({ message: err.message });
-    }
-  },
+  register = async (req: Request, res: Response) => {
+    const result = await this.service.register(req.body);
+    return res.status(201).json(result);
+  };
 
-  async refresh(req: Request, res: Response) {
-    try {
-      const { refreshToken } = req.body;
-      const result = await authService.refresh(refreshToken);
-      return res.json(result);
-    } catch (err: any) {
-      return res.status(400).json({ message: err.message });
-    }
-  }
-};
+  login = async (req: Request, res: Response) => {
+    const { email, password } = req.body;
+    const result = await this.service.login(email, password);
+    return res.json(result);
+  };
+}

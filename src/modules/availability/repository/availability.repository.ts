@@ -1,31 +1,53 @@
 import { prisma } from "../../../lib/prisma";
 
-export const availabilityRepository = {
-
-  getWorkingHours(providerId: string, weekday: number) {
-    return prisma.providerWorkingHours.findUnique({
-      where: { providerId_weekday: { providerId, weekday } }
-    });
-  },
-
-  getBreaks(providerId: string, date: Date) {
-    return prisma.providerBreak.findMany({
-      where: { providerId, date }
-    });
-  },
-
-  getAppointments(providerId: string, start: Date, end: Date) {
-    return prisma.appointment.findMany({
-      where: {
-        providerId,
-        start: { gte: start, lt: end }
-      }
-    });
-  },
-
-  getService(serviceId: string) {
-    return prisma.service.findUnique({
-      where: { id: serviceId }
+export class AvailabilityRepository {
+  // disponibilidade semanal
+  async create(data: any) {
+    return prisma.providerAvailability.create({
+      data,
+      include: { provider: true }
     });
   }
-};
+
+  async findByProvider(providerId: string) {
+    return prisma.providerAvailability.findMany({
+      where: { providerId },
+      orderBy: { weekday: "asc" },
+      include: { provider: true }
+    });
+  }
+
+  async findOne(id: string) {
+    return prisma.providerAvailability.findUnique({
+      where: { id },
+      include: { provider: true }
+    });
+  }
+
+  async update(id: string, data: any) {
+    return prisma.providerAvailability.update({
+      where: { id },
+      data,
+      include: { provider: true }
+    });
+  }
+
+  async delete(id: string) {
+    return prisma.providerAvailability.delete({ where: { id } });
+  }
+
+  // exceções (folgas, bloqueios etc.)
+  async createException(data: any) {
+    return prisma.providerException.create({
+      data,
+      include: { provider: true }
+    });
+  }
+
+  async getExceptions(providerId: string) {
+    return prisma.providerException.findMany({
+      where: { providerId },
+      orderBy: { date: "asc" }
+    });
+  }
+}

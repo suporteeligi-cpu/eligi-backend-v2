@@ -1,13 +1,10 @@
-import { z } from "zod";
+export interface LoginDTO {
+  email: string;
+  password: string;
+}
 
-export const registerSchema = z.object({
-  email: z.string().email(),
-  phone: z.string().optional(),
-  password: z.string().min(6),
-  role: z.enum(["client", "provider", "business_owner", "admin"]).default("client"),
-});
-
-export const loginSchema = z.object({
-  email: z.string().email(),
-  password: z.string(),
-});
+export interface RegisterDTO {
+  name: string;
+  email: string;
+  password: string;
+}

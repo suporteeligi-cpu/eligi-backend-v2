@@ -1,60 +1,38 @@
 import { prisma } from "../../../lib/prisma";
 
-export const financeRepository = {
-
-  paymentsInRange(businessId: string, start: Date, end: Date) {
+export class FinanceRepository {
+  async getPayments(businessId: string, start?: string, end?: string) {
     return prisma.payment.findMany({
       where: {
-        appointment: {
-          businessId,
-          start: { gte: start, lt: end }
+        businessId,
+        createdAt: {
+          gte: start ? new Date(start) : undefined,
+          lte: end ? new Date(end) : undefined
         }
       },
       include: {
-        appointment: true,
-        user: true
+        provider: true,
+        client: true,
+        appointment: true
       }
-    });
-  },
-
-  payoutsInRange(businessId: string, start: Date, end: Date) {
-    return prisma.payout.findMany({
-      where: {
-        appointment: {
-          businessId,
-          start: { gte: start, lt: end }
-        }
-      },
-      include: {
-        appointment: true,
-        provider: true
-      }
-    });
-  },
-
-  salesGroupedByMethod(businessId: string, start: Date, end: Date) {
-    return prisma.payment.groupBy({
-      by: ["method"],
-      where: {
-        appointment: {
-          businessId,
-          start: { gte: start, lt: end }
-        }
-      },
-      _sum: { amount: true }
-    });
-  },
-
-  dailyCashflow(businessId: string, start: Date, end: Date) {
-    return prisma.payment.groupBy({
-      by: ["appointmentId"],
-      where: {
-        appointment: {
-          businessId,
-          start: { gte: start, lt: end }
-        }
-      },
-      _sum: { amount: true }
     });
   }
-};
+
+  async getInvoices(businessId: string) {
+    return prisma.invoice.findMany({
+      where: { businessId },
+      include: {
+        provider: true,
+        client: true,
+        payment: true
+      }
+    });
+  }
+
+  async getProviders(businessId: string) {
+    return prisma.provider.findMany({
+      where: { businessId },
+      include: { user: true }
+    });
+  }
+}

@@ -1,38 +1,34 @@
-import { businessRepository } from "../repository/business.repository";
+import { BusinessRepository } from "../repository/business.repository";
+import { AppError } from "../../../core/errors/AppError";
 
-export const businessService = {
-  async createBusiness(ownerId: string, data: any) {
-    const exists = await businessRepository.findBusinessByOwner(ownerId);
-    if (exists) throw new Error("O usuário já possui um negócio criado.");
+export class BusinessService {
+  private repo = new BusinessRepository();
 
-    return businessRepository.createBusiness({
-      ownerId,
-      ...data
-    });
-  },
+  async createBusiness(data: any) {
+    if (!data.ownerId) {
+      throw new AppError("ownerId é obrigatório.", 400);
+    }
 
-  async getMyBusiness(ownerId: string) {
-    return businessRepository.findBusinessByOwner(ownerId);
-  },
-
-  async updateBusiness(ownerId: string, data: any) {
-    const business = await businessRepository.findBusinessByOwner(ownerId);
-    if (!business) throw new Error("Negócio não encontrado.");
-
-    return businessRepository.updateBusiness(business.id, data);
-  },
-
-  async updateAddress(ownerId: string, data: any) {
-    const business = await businessRepository.findBusinessByOwner(ownerId);
-    if (!business) throw new Error("Negócio não encontrado.");
-
-    return businessRepository.updateAddress(business.id, data);
-  },
-
-  async updateSettings(ownerId: string, data: any) {
-    const business = await businessRepository.findBusinessByOwner(ownerId);
-    if (!business) throw new Error("Negócio não encontrado.");
-
-    return businessRepository.updateSettings(business.id, data);
+    return this.repo.create(data);
   }
-};
+
+  async getBusiness(id: string) {
+    const business = await this.repo.findById(id);
+    if (!business) throw new AppError("Negócio não encontrado.", 404);
+    return business;
+  }
+
+  async getByOwner(ownerId: string) {
+    return this.repo.findByOwner(ownerId);
+  }
+
+  async updateBusiness(id: string, data: any) {
+    await this.getBusiness(id); // valida existência
+    return this.repo.update(id, data);
+  }
+
+  async deleteBusiness(id: string) {
+    await this.getBusiness(id);
+    return this.repo.delete(id);
+  }
+}

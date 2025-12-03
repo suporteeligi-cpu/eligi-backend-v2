@@ -1,36 +1,41 @@
 {
-  "name": "eligi-v2",
+  "name": "eligi-backend-v2",
   "version": "1.0.0",
-  "description": "Backend oficial do ELIGI v2.0 - SaaS para barbearias e salões",
-  "main": "src/server.ts",
+  "description": "ELIGI SaaS Backend v2.0 - Node.js, Express, Prisma, PostgreSQL",
+  "main": "dist/server.js",
   "scripts": {
-    "test": "echo \"No tests configured\" && exit 0",
-    "dev": "ts-node-dev --respawn --transpile-only -r tsconfig-paths/register src/server.ts",
-    "postinstall": "npx prisma generate",
+    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "build": "tsc -p tsconfig.json",
     "start": "node dist/server.js",
-    "migrate": "npx prisma migrate deploy"
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:deploy": "prisma migrate deploy",
+    "lint": "eslint . --ext .ts"
   },
   "dependencies": {
-    "@prisma/client": "^5.18.0",
-    "@prisma/engines": "^7.0.1",
-    "axios": "^1.13.2",
-    "bcryptjs": "^3.0.3",
+    "@prisma/client": "^5.14.0",
+    "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
-    "dotenv": "^17.2.3",
-    "express": "^5.1.0",
+    "dayjs": "^1.11.13",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.2",
-    "zod": "^4.1.13"
+    "morgan": "^1.10.0",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
-    "@types/bcryptjs": "^2.4.6",
-    "@types/cors": "^2.8.19",
-    "@types/express": "^5.0.5",
-    "@types/jsonwebtoken": "^9.0.10",
-    "@types/node": "^24.10.1",
-    "prisma": "^5.18.0",
+    "@types/bcryptjs": "^2.4.3",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/jsonwebtoken": "^9.0.2",
+    "@types/morgan": "^1.9.7",
+    "@types/node": "^20.12.7",
+    "@typescript-eslint/eslint-plugin": "^7.18.0",
+    "@typescript-eslint/parser": "^7.18.0",
+    "eslint": "^8.56.0",
+    "prisma": "^5.14.0",
     "ts-node-dev": "^2.0.0",
-    "tsconfig-paths": "^4.2.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.3.3"
   }
 }

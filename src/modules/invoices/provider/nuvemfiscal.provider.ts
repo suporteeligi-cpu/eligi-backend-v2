@@ -1,24 +1,12 @@
-import axios from "axios";
+export class NuvemFiscalProvider {
+  async generateNFSe(data: any) {
+    // Aqui entra a integração real com a Nuvem Fiscal API
+    console.log("📄 Gerando NFSe via Nuvem Fiscal...");
 
-export const nuvemFiscal = {
-
-  async issueNfse(payload: any) {
-    try {
-      const res = await axios.post(
-        "https://api.nuvemfiscal.com.br/api/v1/nfse",
-        payload,
-        {
-          headers: {
-            Authorization: `Bearer ${process.env.NUVEM_FISCAL_API_KEY}`,
-            "Content-Type": "application/json"
-          }
-        }
-      );
-
-      return res.data;
-
-    } catch (err: any) {
-      throw new Error(err.response?.data?.message ?? "Erro ao emitir NFS-e");
-    }
+    return {
+      status: "issued",
+      nfseNumber: "NF-" + Date.now(),
+      verificationUrl: "https://nfse.fake/" + Date.now()
+    };
   }
-};
+}

@@ -1,46 +1,46 @@
-import { AuthRequest } from "../../../middlewares/auth.middleware";
-import { Response } from "express";
-import { adminService } from "../service/admin.service";
+import { Request, Response } from "express";
+import { AdminService } from "../service/admin.service";
 
-export const adminController = {
+export class AdminController {
+  private service = new AdminService();
 
-  async list(req: AuthRequest, res: Response) {
-    try {
-      const result = await adminService.listBusinesses(req.user);
-      return res.json(result);
+  // USUÁRIOS
+  listUsers = async (_req: Request, res: Response) => {
+    const result = await this.service.listUsers();
+    return res.json(result);
+  };
 
-    } catch (err: any) {
-      res.status(403).json({ message: err.message });
-    }
-  },
+  toggleUser = async (req: Request, res: Response) => {
+    const result = await this.service.toggleUser(
+      req.params.id,
+      req.body.active
+    );
+    return res.json(result);
+  };
 
-  async suspend(req: AuthRequest, res: Response) {
-    try {
-      const result = await adminService.suspend(req.user, req.params.id);
-      return res.json(result);
+  // NEGÓCIOS
+  listBusinesses = async (_req: Request, res: Response) => {
+    const result = await this.service.listBusinesses();
+    return res.json(result);
+  };
 
-    } catch (err: any) {
-      res.status(403).json({ message: err.message });
-    }
-  },
+  toggleBusiness = async (req: Request, res: Response) => {
+    const result = await this.service.toggleBusiness(
+      req.params.id,
+      req.body.active
+    );
+    return res.json(result);
+  };
 
-  async activate(req: AuthRequest, res: Response) {
-    try {
-      const result = await adminService.activate(req.user, req.params.id);
-      return res.json(result);
+  // ASSINATURAS
+  listSubscriptions = async (_req: Request, res: Response) => {
+    const result = await this.service.listSubscriptions();
+    return res.json(result);
+  };
 
-    } catch (err: any) {
-      res.status(403).json({ message: err.message });
-    }
-  },
-
-  async delete(req: AuthRequest, res: Response) {
-    try {
-      const result = await adminService.remove(req.user, req.params.id);
-      return res.json(result);
-
-    } catch (err: any) {
-      res.status(403).json({ message: err.message });
-    }
-  }
-};
+  // MÉTRICAS
+  metrics = async (_req: Request, res: Response) => {
+    const result = await this.service.metrics();
+    return res.json(result);
+  };
+}

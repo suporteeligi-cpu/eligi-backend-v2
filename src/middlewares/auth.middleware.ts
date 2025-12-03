@@ -1,50 +1,24 @@
-// src/middlewares/auth.middleware.ts
 import { Request, Response, NextFunction } from "express";
+import { AppError } from "../core/errors/AppError";
 import jwt from "jsonwebtoken";
-import { prisma } from "../lib/prisma";
+import { env } from "../config/env";
 
-export interface AuthRequest extends Request {
-  user?: {
-    id: string;
-    role: string;
-  };
-}
-
-export async function authMiddleware(
-  req: AuthRequest,
-  res: Response,
+export function authMiddleware(
+  req: Request,
+  _res: Response,
   next: NextFunction
 ) {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader) throw new AppError("Token não informado", 401);
+
+  const token = authHeader.replace("Bearer ", "");
+
   try {
-    const authHeader = req.headers.authorization;
-
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return res.status(401).json({ message: "Token não fornecido." });
-    }
-
-    const token = authHeader.split(" ")[1];
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as {
-      userId: string;
-      role: string;
-    };
-
-    // garante que o usuário existe
-    const user = await prisma.user.findUnique({
-      where: { id: decoded.userId },
-    });
-
-    if (!user) {
-      return res.status(401).json({ message: "Usuário inválido." });
-    }
-
-    req.user = {
-      id: user.id,
-      role: user.role,
-    };
-
+    const decoded = jwt.verify(token, env.JWT_SECRET);
+    (req as any).user = decoded;
     next();
-  } catch (err) {
-    return res.status(401).json({ message: "Token inválido ou expirado." });
+  } catch {
+    throw new AppError("Token inválido", 401);
   }
 }

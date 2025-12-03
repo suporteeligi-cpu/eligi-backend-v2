@@ -1,60 +1,38 @@
 import { Request, Response } from "express";
-import { AuthRequest } from "../../../middlewares/auth.middleware";
-import { businessService } from "../service/business.service";
-import { createBusinessSchema, updateAddressSchema, updateSettingsSchema } from "../dto/business.dto";
+import { BusinessService } from "../service/business.service";
 
-export const businessController = {
-  async create(req: AuthRequest, res: Response) {
-    try {
-      const ownerId = req.user.id;
-      const data = createBusinessSchema.parse(req.body);
+export class BusinessController {
+  private service = new BusinessService();
 
-      const business = await businessService.createBusiness(ownerId, data);
-      return res.status(201).json(business);
-    } catch (err: any) {
-      return res.status(400).json({ message: err.message });
-    }
-  },
+  create = async (req: Request, res: Response) => {
+    const ownerId = (req as any).user.id;
 
-  async me(req: AuthRequest, res: Response) {
-    try {
-      const ownerId = req.user.id;
-      const data = await businessService.getMyBusiness(ownerId);
-      return res.json(data);
-    } catch (err: any) {
-      return res.status(400).json({ message: err.message });
-    }
-  },
+    const result = await this.service.createBusiness({
+      ...req.body,
+      ownerId
+    });
 
-  async update(req: AuthRequest, res: Response) {
-    try {
-      const ownerId = req.user.id;
-      const business = await businessService.updateBusiness(ownerId, req.body);
-      return res.json(business);
-    } catch (err: any) {
-      return res.status(400).json({ message: err.message });
-    }
-  },
+    return res.status(201).json(result);
+  };
 
-  async updateAddress(req: AuthRequest, res: Response) {
-    try {
-      const ownerId = req.user.id;
-      const data = updateAddressSchema.parse(req.body);
-      const address = await businessService.updateAddress(ownerId, data);
-      return res.json(address);
-    } catch (err: any) {
-      return res.status(400).json({ message: err.message });
-    }
-  },
+  getOne = async (req: Request, res: Response) => {
+    const result = await this.service.getBusiness(req.params.id);
+    return res.json(result);
+  };
 
-  async updateSettings(req: AuthRequest, res: Response) {
-    try {
-      const ownerId = req.user.id;
-      const data = updateSettingsSchema.parse(req.body);
-      const settings = await businessService.updateSettings(ownerId, data);
-      return res.json(settings);
-    } catch (err: any) {
-      return res.status(400).json({ message: err.message });
-    }
-  }
-};
+  getByOwner = async (req: Request, res: Response) => {
+    const ownerId = (req as any).user.id;
+    const result = await this.service.getByOwner(ownerId);
+    return res.json(result);
+  };
+
+  update = async (req: Request, res: Response) => {
+    const result = await this.service.updateBusiness(req.params.id, req.body);
+    return res.json(result);
+  };
+
+  delete = async (req: Request, res: Response) => {
+    await this.service.deleteBusiness(req.params.id);
+    return res.status(204).send();
+  };
+}

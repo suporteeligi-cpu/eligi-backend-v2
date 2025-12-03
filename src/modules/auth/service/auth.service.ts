@@ -1,63 +1,40 @@
-import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
-import { authRepository } from "../repository/auth.repository";
+import { AuthRepository } from "../repository/auth.repository";
+import { PasswordService } from "./password.service";
+import { TokenService } from "./token.service";
+import { AppError } from "../../../core/errors/AppError";
 
-export const authService = {
+export class AuthService {
+  private repo = new AuthRepository();
+  private password = new PasswordService();
+  private token = new TokenService();
+
   async register(data: any) {
-    const existing = await authRepository.findUserByEmail(data.email);
-    if (existing) throw new Error("Email já registrado");
+    const exists = await this.repo.findByEmail(data.email);
+    if (exists) throw new AppError("E-mail já está em uso.", 400);
 
-    const passwordHash = await bcrypt.hash(data.password, 10);
+    const hashed = await this.password.hash(data.password);
 
-    const user = await authRepository.createUser({
+    const user = await this.repo.createUser({
       ...data,
-      passwordHash,
+      password: hashed
     });
 
-    return user;
-  },
-
-  async login(data: any) {
-    const user = await authRepository.findUserByEmail(data.email);
-    if (!user) throw new Error("Credenciais inválidas");
-
-    const ok = await bcrypt.compare(data.password, user.passwordHash || "");
-    if (!ok) throw new Error("Credenciais inválidas");
-
-    const accessToken = jwt.sign(
-      { id: user.id, role: user.role },
-      process.env.JWT_SECRET!,
-      { expiresIn: "15m" }
-    );
-
-    const refreshToken = jwt.sign(
-      { id: user.id },
-      process.env.JWT_SECRET!,
-      { expiresIn: "7d" }
-    );
-
-    await authRepository.saveRefreshToken({
-      userId: user.id,
-      refreshToken,
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-    });
-
-    return { user, accessToken, refreshToken };
-  },
-
-  async refresh(token: string) {
-    const stored = await authRepository.findRefreshToken(token);
-
-    if (!stored) throw new Error("Refresh token inválido");
-
-    const payload: any = jwt.verify(token, process.env.JWT_SECRET!);
-
-    const newAccessToken = jwt.sign(
-      { id: payload.id },
-      process.env.JWT_SECRET!,
-      { expiresIn: "15m" }
-    );
-
-    return { accessToken: newAccessToken };
+    return {
+      user,
+      token: this.token.generate({ id: user.id })
+    };
   }
-};
+
+  async login(email: string, password: string) {
+    const user = await this.repo.findByEmail(email);
+    if (!user) throw new AppError("Credenciais inválidas", 401);
+
+    const isValid = await this.password.compare(password, user.password);
+    if (!isValid) throw new AppError("Credenciais inválidas", 401);
+
+    return {
+      user,
+      token: this.token.generate({ id: user.id })
+    };
+  }
+}

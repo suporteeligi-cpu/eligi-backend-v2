@@ -1,28 +1,56 @@
 import { prisma } from "../../../lib/prisma";
 
-export const adminRepository = {
+export class AdminRepository {
+  // USUÁRIOS
+  async listUsers() {
+    return prisma.user.findMany({ orderBy: { createdAt: "desc" } });
+  }
 
-  listBusinesses: () =>
-    prisma.business.findMany({
+  async getUser(id: string) {
+    return prisma.user.findUnique({ where: { id } });
+  }
+
+  async toggleUserStatus(id: string, active: boolean) {
+    return prisma.user.update({
+      where: { id },
+      data: { active }
+    });
+  }
+
+  // NEGÓCIOS
+  async listBusinesses() {
+    return prisma.business.findMany({
+      include: { owner: true }
+    });
+  }
+
+  async toggleBusinessStatus(id: string, active: boolean) {
+    return prisma.business.update({
+      where: { id },
+      data: { active }
+    });
+  }
+
+  // ASSINATURAS
+  async listSubscriptions() {
+    return prisma.subscription.findMany({
       include: {
-        owner: true,
-        providers: true,
-        appointments: true
+        plan: true,
+        business: true
       }
-    }),
+    });
+  }
 
-  suspendBusiness: (businessId: string) =>
-    prisma.business.update({
-      where: { id: businessId },
-      data: { subscriptionStatus: "suspended" }
-    }),
+  // MÉTRICAS GLOBAIS
+  async countTotalUsers() {
+    return prisma.user.count();
+  }
 
-  activateBusiness: (businessId: string) =>
-    prisma.business.update({
-      where: { id: businessId },
-      data: { subscriptionStatus: "active" }
-    }),
+  async countTotalBusinesses() {
+    return prisma.business.count();
+  }
 
-  deleteBusiness: (businessId: string) =>
-    prisma.business.delete({ where: { id: businessId } }),
-};
+  async countTotalAppointments() {
+    return prisma.appointment.count();
+  }
+}

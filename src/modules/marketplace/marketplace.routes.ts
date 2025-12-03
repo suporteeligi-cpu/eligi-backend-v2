@@ -1,15 +1,21 @@
 import { Router } from "express";
+import { FavoriteController } from "./favorites/controller/favorites.controller";
+import { ReviewController } from "./reviews/controller/reviews.controller";
 import { authMiddleware } from "../../middlewares/auth.middleware";
-import { reviewController } from "./controller/review.controller";
-import { favoriteController } from "./controller/favorite.controler";
 
 const router = Router();
+const favorite = new FavoriteController();
+const review = new ReviewController();
 
-router.post("/review", authMiddleware, reviewController.create);
-router.get("/reviews/business/:businessId", authMiddleware, reviewController.listByBusiness);
-router.get("/reviews/provider/:providerId", authMiddleware, reviewController.listByProvider);
+router.use(authMiddleware);
 
-router.post("/favorite", authMiddleware, favoriteController.toggle);
-router.get("/favorites", authMiddleware, favoriteController.myFavorites);
+// FAVORITES
+router.post("/favorite", favorite.create);
+router.get("/favorite/:clientId", favorite.listByClient);
+router.delete("/favorite/:id", favorite.delete);
+
+// REVIEWS
+router.post("/review", review.create);
+router.get("/review/provider/:providerId", review.listByProvider);
 
 export default router;

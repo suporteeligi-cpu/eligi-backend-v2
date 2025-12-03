@@ -1,12 +1,25 @@
 import { Router } from "express";
+import { AdminController } from "./controller/admin.controller";
 import { authMiddleware } from "../../middlewares/auth.middleware";
-import { adminController } from "./controller/admin.controller";
 
 const router = Router();
+const controller = new AdminController();
 
-router.get("/businesses", authMiddleware, adminController.list);
-router.put("/suspend/:id", authMiddleware, adminController.suspend);
-router.put("/activate/:id", authMiddleware, adminController.activate);
-router.delete("/:id", authMiddleware, adminController.delete);
+// Middleware de autenticação (superadmin no futuro)
+router.use(authMiddleware);
+
+// Usuários
+router.get("/users", controller.listUsers);
+router.put("/users/:id/status", controller.toggleUser);
+
+// Negócios
+router.get("/businesses", controller.listBusinesses);
+router.put("/businesses/:id/status", controller.toggleBusiness);
+
+// Assinaturas
+router.get("/subscriptions", controller.listSubscriptions);
+
+// Métricas gerais
+router.get("/metrics", controller.metrics);
 
 export default router;

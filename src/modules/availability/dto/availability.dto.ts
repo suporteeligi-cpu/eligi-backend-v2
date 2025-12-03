@@ -1,7 +1,19 @@
-import { z } from "zod";
+export interface CreateAvailabilityDTO {
+  providerId: string;
+  weekday: number; // 0-6
+  start: string;  // "HH:mm"
+  end: string;    // "HH:mm"
+}
 
-export const availabilitySchema = z.object({
-  providerId: z.string(),
-  serviceId: z.string(),
-  date: z.string(), // yyyy-mm-dd
-});
+export interface CreateExceptionDTO {
+  providerId: string;
+  date: string;     // "YYYY-MM-DD"
+  start: string;    // "HH:mm"
+  end: string;      // "HH:mm"
+  reason?: string;
+}
+
+export interface UpdateAvailabilityDTO {
+  start?: string;
+  end?: string;
+}

@@ -7,48 +7,29 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id           String   @id @default(uuid())
-  email        String   @unique
-  phone        String?
-  passwordHash String?
-  role         UserRole
-  status       String   @default("active")
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+//////////////////////////
+// USER
+//////////////////////////
 
-  oauth         OAuth[]
-  sessions      RefreshToken[]
+model User {
+  id       String   @id @default(uuid())
+  name     String
+  email    String   @unique
+  phone    String?
+  password String
+  role     UserRole
+  active   Boolean  @default(true)
+
+  // Relacionamentos
+  businessOwned Business?
   provider      Provider?
-  business      Business?      @relation("OwnerBusiness")
+  appointments  Appointment[]  @relation("AppointmentClient")
   reviews       Review[]
   favorites     Favorite[]
-  appointments  Appointment[]
-  payments      Payment[]
-  invoices      Invoice[]
   notifications Notification[]
 
-  @@map("users")
-}
-
-model OAuth {
-  id         String        @id @default(uuid())
-  user       User          @relation(fields: [userId], references: [id])
-  userId     String
-  provider   OAuthProvider
-  providerId String
-
-  @@map("oauth")
-}
-
-model RefreshToken {
-  id           String   @id @default(uuid())
-  user         User     @relation(fields: [userId], references: [id])
-  userId       String
-  refreshToken String
-  expiresAt    DateTime
-
-  @@map("refresh_tokens")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 enum UserRole {
@@ -58,338 +39,258 @@ enum UserRole {
   admin
 }
 
-enum OAuthProvider {
-  google
-  apple
-  facebook
-}
-
-model Provider {
-  id             String   @id @default(uuid())
-  userId         String   @unique
-  user           User     @relation(fields: [userId], references: [id])
-  businessId     String
-  business       Business @relation(fields: [businessId], references: [id])
-  name           String
-  bio            String?
-  avatarUrl      String?
-  rating         Float    @default(0)
-  visible        Boolean  @default(true)
-  specialization String?
-
-  workingHours     ProviderWorkingHours[]
-  breaks           ProviderBreak[]
-  services         ProviderService[]
-  appointments     Appointment[]
-  payouts          Payout[]
-  reviews          Review[]
-  appointmentStats AppointmentStats[]
-}
-
-model ProviderWorkingHours {
-  id         String   @id @default(uuid())
-  provider   Provider @relation(fields: [providerId], references: [id])
-  providerId String
-  weekday    Int
-  start      String
-  end        String
-
-  @@unique([providerId, weekday], name: "providerId_weekday")
-  @@map("provider_working_hours")
-}
-
-model ProviderBreak {
-  id         String   @id @default(uuid())
-  provider   Provider @relation(fields: [providerId], references: [id])
-  providerId String
-  date       DateTime
-  start      String
-  end        String
-  reason     String?
-
-  @@map("provider_breaks")
-}
+//////////////////////////
+// BUSINESS
+//////////////////////////
 
 model Business {
-  id      String @id @default(uuid())
-  ownerId String @unique
-  owner   User   @relation("OwnerBusiness", fields: [ownerId], references: [id])
+  id          String  @id @default(uuid())
+  ownerId     String  @unique
+  name        String
+  description String?
+  phone       String?
+  active      Boolean @default(true)
 
-  type               String
-  name               String
-  description        String?
-  logoUrl            String?
-  phone              String?
-  document           String?
-  timezone           String?
-  subscriptionStatus String  @default("active")
+  owner User @relation(fields: [ownerId], references: [id])
 
-  address       BusinessAddress?
-  settings      BusinessSettings?
   providers     Provider[]
   services      Service[]
   appointments  Appointment[]
-  reviews       Review[]
-  analytics     AppointmentStats[]
-  favorites     Favorite[]
+  payments      Payment[]
+  invoices      Invoice[]
   subscriptions Subscription[]
+  favorites     Favorite[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
-model BusinessAddress {
-  id           String   @id @default(uuid())
-  businessId   String   @unique
-  business     Business @relation(fields: [businessId], references: [id])
-  street       String
-  number       String
-  neighborhood String
-  city         String
-  state        String
-  zipcode      String
-  lat          Float?
-  lng          Float?
+//////////////////////////
+// PROVIDER
+//////////////////////////
+
+model Provider {
+  id         String  @id @default(uuid())
+  userId     String  @unique
+  businessId String
+  bio        String?
+  avatarUrl  String?
+  rating     Float   @default(0)
+
+  user     User     @relation(fields: [userId], references: [id])
+  business Business @relation(fields: [businessId], references: [id])
+
+  services     ProviderService[]
+  appointments Appointment[]     @relation("AppointmentProvider")
+  reviews      Review[]
+  payments     Payment[]
+  invoices     Invoice[]
+  favorites    Favorite[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
-model BusinessSettings {
-  id         String   @id @default(uuid())
-  businessId String   @unique
-  business   Business @relation(fields: [businessId], references: [id])
-
-  cancelPolicy       String?
-  minBookingTime     Int?
-  minAdvanceTime     Int?
-  allowOnlinePayment Boolean @default(true)
-  allowDeposit       Boolean @default(false)
-  allowReschedule    Boolean @default(true)
-}
+//////////////////////////
+// SERVICES
+//////////////////////////
 
 model Service {
-  id          String   @id @default(uuid())
-  business    Business @relation(fields: [businessId], references: [id])
-  businessId  String
-  providerId  String?
-  name        String
-  description String?
-  price       Float
-  durationMin Int
-  category    String?
-  visible     Boolean  @default(true)
+  id         String @id @default(uuid())
+  businessId String
+  name       String
+  duration   Int
+  price      Float
 
-  providerLinks ProviderService[]
-  appointments  Appointment[]
+  business     Business          @relation(fields: [businessId], references: [id])
+  providers    ProviderService[]
+  appointments Appointment[]     @relation("AppointmentService")
 
-  @@map("services")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model ProviderService {
-  provider   Provider @relation(fields: [providerId], references: [id])
   providerId String
-  service    Service  @relation(fields: [serviceId], references: [id])
   serviceId  String
 
-  priceOverride    Float?
-  durationOverride Int?
+  provider Provider @relation(fields: [providerId], references: [id])
+  service  Service  @relation(fields: [serviceId], references: [id])
 
   @@id([providerId, serviceId])
-  @@map("provider_services")
 }
+
+//////////////////////////
+// APPOINTMENTS
+//////////////////////////
 
 model Appointment {
   id         String            @id @default(uuid())
-  business   Business          @relation(fields: [businessId], references: [id])
   businessId String
-  provider   Provider          @relation(fields: [providerId], references: [id])
   providerId String
-  user       User              @relation(fields: [userId], references: [id])
-  userId     String
-  service    Service           @relation(fields: [serviceId], references: [id])
+  clientId   String
   serviceId  String
-  start      DateTime
-  end        DateTime
-  price      Float
+  date       DateTime
+  time       String
   status     AppointmentStatus @default(scheduled)
-  createdAt  DateTime          @default(now())
-  updatedAt  DateTime          @updatedAt
 
-  history  AppointmentStatusHistory[]
-  payment  Payment?
-  cancel   Cancellation?
-  payouts  Payout[]
-  invoices Invoice[]
+  provider Provider @relation("AppointmentProvider", fields: [providerId], references: [id])
+  client   User     @relation("AppointmentClient", fields: [clientId], references: [id])
+  service  Service  @relation("AppointmentService", fields: [serviceId], references: [id])
+  business Business @relation(fields: [businessId], references: [id])
 
-  @@map("appointments")
-}
+  payment Payment?
+  review  Review?
 
-model AppointmentStatusHistory {
-  id            String             @id @default(uuid())
-  appointment   Appointment        @relation(fields: [appointmentId], references: [id])
-  appointmentId String
-  oldStatus     AppointmentStatus?
-  newStatus     AppointmentStatus
-  timestamp     DateTime           @default(now())
-
-  @@map("appointment_status_history")
-}
-
-model Cancellation {
-  id            String      @id @default(uuid())
-  appointmentId String      @unique
-  appointment   Appointment @relation(fields: [appointmentId], references: [id])
-
-  canceledBy String
-  reasonCode String?
-  reasonText String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 enum AppointmentStatus {
   scheduled
-  finished
+  completed
   canceled
-  no_show
-  expired
 }
+
+//////////////////////////
+// PAYMENTS
+//////////////////////////
 
 model Payment {
-  id            String      @id @default(uuid())
-  appointmentId String      @unique
-  appointment   Appointment @relation(fields: [appointmentId], references: [id])
-
-  userId               String
-  user                 User    @relation(fields: [userId], references: [id])
-  method               String
-  amount               Float
-  status               String
-  transactionIdGateway String?
-}
-
-model Payout {
-  id            String      @id @default(uuid())
-  provider      Provider    @relation(fields: [providerId], references: [id])
-  providerId    String
-  appointment   Appointment @relation(fields: [appointmentId], references: [id])
-  appointmentId String
+  id            String        @id @default(uuid())
+  businessId    String
+  providerId    String?
+  appointmentId String?       @unique
   amount        Float
-  fee           Float?
-  netAmount     Float
-  payoutDate    DateTime?
+  method        String
+  status        PaymentStatus @default(pending)
+  externalId    String?
 
-  @@map("payouts")
+  provider    Provider?    @relation(fields: [providerId], references: [id])
+  appointment Appointment? @relation(fields: [appointmentId], references: [id])
+  business    Business     @relation(fields: [businessId], references: [id])
+
+  invoice Invoice?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
+
+enum PaymentStatus {
+  pending
+  approved
+  failed
+}
+
+//////////////////////////
+// INVOICES
+//////////////////////////
 
 model Invoice {
-  id            String       @id @default(uuid())
-  user          User         @relation(fields: [userId], references: [id])
-  userId        String
-  appointment   Appointment? @relation(fields: [appointmentId], references: [id])
-  appointmentId String?
-  tipo          String
-  urlPdf        String
-
-  @@map("invoices")
-}
-
-model Review {
-  id         String   @id @default(uuid())
-  business   Business @relation(fields: [businessId], references: [id])
+  id         String  @id @default(uuid())
   businessId String
-  provider   Provider @relation(fields: [providerId], references: [id])
-  providerId String
-  user       User     @relation(fields: [userId], references: [id])
-  userId     String
-  rating     Int
-  comment    String?
-  createdAt  DateTime @default(now())
+  providerId String?
+  paymentId  String? @unique
+  nfseNumber String?
+  nfseStatus String?
 
-  images ReviewImage[]
+  provider Provider? @relation(fields: [providerId], references: [id])
+  business Business  @relation(fields: [businessId], references: [id])
+  payment  Payment?  @relation(fields: [paymentId], references: [id])
 
-  @@map("reviews")
-}
-
-model ReviewImage {
-  id       String @id @default(uuid())
-  review   Review @relation(fields: [reviewId], references: [id])
-  reviewId String
-  url      String
-
-  @@map("review_images")
-}
-
-model Favorite {
-  user       User     @relation(fields: [userId], references: [id])
-  userId     String
-  business   Business @relation(fields: [businessId], references: [id])
-  businessId String
-
-  @@id([userId, businessId])
-  @@map("favorites")
-}
-
-model Notification {
-  id        String   @id @default(uuid())
-  user      User     @relation(fields: [userId], references: [id])
-  userId    String
-  type      String
-  title     String
-  message   String
-  read      Boolean  @default(false)
   createdAt DateTime @default(now())
-
-  @@map("notifications")
+  updatedAt DateTime @updatedAt
 }
 
-model NotificationTemplate {
-  id            String  @id @default(uuid())
-  pushTemplate  String?
-  smsTemplate   String?
-  emailTemplate String?
+//////////////////////////
+// BILLING
+//////////////////////////
 
-  @@map("notification_templates")
-}
+model Plan {
+  id       String       @id @default(uuid())
+  name     String
+  price    Float
+  interval PlanInterval
 
-model AppointmentStats {
-  id                String    @id @default(uuid())
-  business          Business  @relation(fields: [businessId], references: [id])
-  businessId        String
-  provider          Provider? @relation(fields: [providerId], references: [id])
-  providerId        String?
-  date              DateTime
-  totalAppointments Int
-  totalRevenue      Float
-}
+  subscriptions Subscription[]
 
-model Webhook {
-  id        String   @id @default(uuid())
-  url       String
-  secret    String
-  active    Boolean  @default(true)
-  events    String[] // ["appointment.created", "payment.confirmed"]
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum PlanInterval {
+  monthly
+  yearly
 }
 
 model Subscription {
-  id               String   @id @default(uuid())
-  businessId       String   @unique
-  business         Business @relation(fields: [businessId], references: [id])
-  plan             String // basic, pro, enterprise
-  price            Float
-  status           String   @default("active")
-  currentPeriodEnd DateTime
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-}
-
-model InvoiceBilling {
-  id         String   @id @default(uuid())
+  id         String  @id @default(uuid())
   businessId String
-  amount     Float
-  status     String // paid, pending, failed
-  externalId String? // Stripe/Pagar.me
-  createdAt  DateTime @default(now())
+  planId     String
+  status     String  @default("active")
+  externalId String?
+
+  business Business @relation(fields: [businessId], references: [id])
+  plan     Plan     @relation(fields: [planId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
-model AuditLog {
+//////////////////////////
+// MARKETPLACE
+//////////////////////////
+
+model Review {
+  id            String  @id @default(uuid())
+  appointmentId String? @unique
+  clientId      String
+  providerId    String
+  rating        Int
+  comment       String?
+
+  provider    Provider     @relation(fields: [providerId], references: [id])
+  client      User         @relation(fields: [clientId], references: [id])
+  appointment Appointment? @relation(fields: [appointmentId], references: [id])
+
+  createdAt DateTime @default(now())
+}
+
+model Favorite {
+  id         String  @id @default(uuid())
+  clientId   String
+  providerId String?
+  businessId String?
+
+  client   User      @relation(fields: [clientId], references: [id])
+  provider Provider? @relation(fields: [providerId], references: [id])
+  business Business? @relation(fields: [businessId], references: [id])
+}
+
+//////////////////////////
+// NOTIFICATIONS
+//////////////////////////
+
+model Notification {
+  id      String  @id @default(uuid())
+  userId  String
+  title   String
+  message String
+  channel String?
+
+  user User @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+}
+
+//////////////////////////
+// WEBHOOKS
+//////////////////////////
+
+model WebhookEvent {
   id        String   @id @default(uuid())
-  userId    String?
-  action    String
-  details   String?
+  provider  String
+  event     String
+  payload   Json
   createdAt DateTime @default(now())
 }

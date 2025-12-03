@@ -1,24 +1,40 @@
-import { Response } from "express";
-import { AuthRequest } from "../../../middlewares/auth.middleware";
-import { availabilityService } from "../service/availability.service";
-import { availabilitySchema } from "../dto/availability.dto";
+import { Request, Response } from "express";
+import { AvailabilityService } from "../service/availability.service";
 
-export const availabilityController = {
+export class AvailabilityController {
+  private service = new AvailabilityService();
 
-  async get(req: AuthRequest, res: Response) {
-    try {
-      const { providerId, serviceId, date } = availabilitySchema.parse(req.query);
+  create = async (req: Request, res: Response) => {
+    const result = await this.service.createAvailability(req.body);
+    return res.status(201).json(result);
+  };
 
-      const result = await availabilityService.getAvailability(
-        providerId,
-        serviceId,
-        date
-      );
+  listByProvider = async (req: Request, res: Response) => {
+    const result = await this.service.getByProvider(req.params.providerId);
+    return res.json(result);
+  };
 
-      return res.json(result);
+  update = async (req: Request, res: Response) => {
+    const result = await this.service.updateAvailability(
+      req.params.id,
+      req.body
+    );
+    return res.json(result);
+  };
 
-    } catch (err: any) {
-      res.status(400).json({ message: err.message });
-    }
-  }
-};
+  delete = async (req: Request, res: Response) => {
+    await this.service.deleteAvailability(req.params.id);
+    return res.status(204).send();
+  };
+
+  // EXCEÇÕES
+  createException = async (req: Request, res: Response) => {
+    const result = await this.service.createException(req.body);
+    return res.status(201).json(result);
+  };
+
+  listExceptions = async (req: Request, res: Response) => {
+    const result = await this.service.listExceptions(req.params.providerId);
+    return res.json(result);
+  };
+}

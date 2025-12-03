@@ -1,62 +1,39 @@
-import { availabilityRepository } from "../repository/availability.repository";
+import { AvailabilityRepository } from "../repository/availability.repository";
+import { AppError } from "../../../core/errors/AppError";
 
-export const availabilityService = {
+export class AvailabilityService {
+  private repo = new AvailabilityRepository();
 
-  async getAvailability(providerId: string, serviceId: string, dateStr: string) {
-    const date = new Date(dateStr + "T00:00:00");
-
-    const weekday = date.getDay();
-
-    const working = await availabilityRepository.getWorkingHours(providerId, weekday);
-    if (!working) return [];
-
-    const service = await availabilityRepository.getService(serviceId);
-    if (!service) throw new Error("Serviço não encontrado");
-
-    const breaks = await availabilityRepository.getBreaks(providerId, date);
-
-    const dayStart = new Date(`${dateStr}T${working.start}`);
-    const dayEnd   = new Date(`${dateStr}T${working.end}`);
-
-    const durationMs = service.durationMin * 60000;
-
-    // criar slots a cada 15 minutos
-    const interval = 15 * 60000;
-    let slots: Date[] = [];
-
-    for (let time = dayStart.getTime(); time + durationMs <= dayEnd.getTime(); time += interval) {
-      slots.push(new Date(time));
+  async createAvailability(data: any) {
+    if (!data.providerId) {
+      throw new AppError("providerId é obrigatório.");
     }
-
-    // remover por pausas
-    for (const br of breaks) {
-      const brStart = new Date(`${dateStr}T${br.start}`);
-      const brEnd = new Date(`${dateStr}T${br.end}`);
-      
-      slots = slots.filter(slot => {
-        const endSlot = new Date(slot.getTime() + durationMs);
-        return !(slot < brEnd && endSlot > brStart);
-      });
-    }
-
-    // remover por agendamentos
-    const appointments = await availabilityRepository.getAppointments(
-      providerId,
-      dayStart,
-      dayEnd
-    );
-
-    for (const appt of appointments) {
-      slots = slots.filter(slot => {
-        const endSlot = new Date(slot.getTime() + durationMs);
-        return !(slot < appt.end && endSlot > appt.start);
-      });
-    }
-
-    // formatar saída amigável
-    return slots.map(s => ({
-      start: s,
-      end: new Date(s.getTime() + durationMs)
-    }));
+    return this.repo.create(data);
   }
-};
+
+  async getByProvider(providerId: string) {
+    return this.repo.findByProvider(providerId);
+  }
+
+  async updateAvailability(id: string, data: any) {
+    await this.repo.findOne(id);
+    return this.repo.update(id, data);
+  }
+
+  async deleteAvailability(id: string) {
+    await this.repo.findOne(id);
+    return this.repo.delete(id);
+  }
+
+  // EXCEÇÕES
+  async createException(data: any) {
+    if (!data.providerId) {
+      throw new AppError("providerId é obrigatório.");
+    }
+    return this.repo.createException(data);
+  }
+
+  async listExceptions(providerId: string) {
+    return this.repo.getExceptions(providerId);
+  }
+}

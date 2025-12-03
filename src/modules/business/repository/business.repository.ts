@@ -1,37 +1,50 @@
 import { prisma } from "../../../lib/prisma";
 
-export const businessRepository = {
-  createBusiness: (data: any) =>
-    prisma.business.create({ data }),
+export class BusinessRepository {
+  async create(data: any) {
+    return prisma.business.create({
+      data,
+      include: {
+        owner: true,
+        address: true
+      }
+    });
+  }
 
-  findBusinessByOwner: (ownerId: string) =>
-    prisma.business.findFirst({
+  async findById(id: string) {
+    return prisma.business.findUnique({
+      where: { id },
+      include: {
+        owner: true,
+        address: true
+      }
+    });
+  }
+
+  async findByOwner(ownerId: string) {
+    return prisma.business.findMany({
       where: { ownerId },
       include: {
-        address: true,
-        settings: true,
-        providers: true,
-        services: true
+        owner: true,
+        address: true
       }
-    }),
+    });
+  }
 
-  updateBusiness: (businessId: string, data: any) =>
-    prisma.business.update({
-      where: { id: businessId },
-      data
-    }),
+  async update(id: string, data: any) {
+    return prisma.business.update({
+      where: { id },
+      data,
+      include: {
+        owner: true,
+        address: true
+      }
+    });
+  }
 
-  updateAddress: (businessId: string, data: any) =>
-    prisma.businessAddress.upsert({
-      where: { businessId },
-      update: data,
-      create: { businessId, ...data }
-    }),
-
-  updateSettings: (businessId: string, data: any) =>
-    prisma.businessSettings.upsert({
-      where: { businessId },
-      update: data,
-      create: { businessId, ...data }
-    })
-};
+  async delete(id: string) {
+    return prisma.business.delete({
+      where: { id }
+    });
+  }
+}

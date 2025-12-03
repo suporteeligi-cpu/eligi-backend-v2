@@ -1,13 +1,16 @@
 import { Router } from "express";
-import { businessController } from "./controller/business.controller";
+import { BusinessController } from "./controller/business.controller";
 import { authMiddleware } from "../../middlewares/auth.middleware";
 
 const router = Router();
+const controller = new BusinessController();
 
-router.post("/", authMiddleware, businessController.create);
-router.get("/me", authMiddleware, businessController.me);
-router.put("/", authMiddleware, businessController.update);
-router.put("/address", authMiddleware, businessController.updateAddress);
-router.put("/settings", authMiddleware, businessController.updateSettings);
+router.use(authMiddleware);
+
+router.post("/", controller.create);
+router.get("/", controller.getByOwner);
+router.get("/:id", controller.getOne);
+router.put("/:id", controller.update);
+router.delete("/:id", controller.delete);
 
 export default router;

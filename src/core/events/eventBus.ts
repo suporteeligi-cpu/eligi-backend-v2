@@ -1,17 +1,6 @@
-type EventHandler = (payload: any) => Promise<void>;
+import { EventEmitter } from "events";
 
-class EventBus {
-  private events: Record<string, EventHandler[]> = {};
+export const eventBus = new EventEmitter();
 
-  on(event: string, handler: EventHandler) {
-    this.events[event] = this.events[event] || [];
-    this.events[event].push(handler);
-  }
-
-  async emit(event: string, payload: any) {
-    const handlers = this.events[event] || [];
-    for (const h of handlers) await h(payload);
-  }
-}
-
-export const eventBus = new EventBus();
+// exemplo:
+// eventBus.on("user.created", (data) => console.log("Novo usuário:", data));

@@ -1,18 +1,31 @@
-import { Response } from "express";
-import { AuthRequest } from "../../../middlewares/auth.middleware";
-import { analyticsService } from "../service/analytics.service";
+import { Request, Response } from "express";
+import { AnalyticsService } from "../service/analytics.service";
 
-export const analyticsController = {
+export class AnalyticsController {
+  private service = new AnalyticsService();
 
-  async dashboard(req: AuthRequest, res: Response) {
-    try {
-      if (!req.user) return res.status(401).json({ message: "Unauthorized" });   // guard
-      const ownerId = req.user.id;
-      const period = (req.query.period as "day" | "week" | "month") || "day";
-      const result = await analyticsService.dashboard(ownerId, period);
-      return res.json(result);
-    } catch (err: any) {
-      return res.status(400).json({ message: err.message });
-    }
-  }
-};
+  summary = async (req: Request, res: Response) => {
+    const result = await this.service.summary({
+      businessId: req.params.businessId,
+      startDate: req.query.start as string,
+      endDate: req.query.end as string
+    });
+
+    return res.json(result);
+  };
+
+  servicesRanking = async (req: Request, res: Response) => {
+    const result = await this.service.servicesRanking(req.params.businessId);
+    return res.json(result);
+  };
+
+  providersRanking = async (req: Request, res: Response) => {
+    const result = await this.service.providersRanking(req.params.businessId);
+    return res.json(result);
+  };
+
+  monthlyGrowth = async (req: Request, res: Response) => {
+    const result = await this.service.monthlyGrowth(req.params.businessId);
+    return res.json(result);
+  };
+}
